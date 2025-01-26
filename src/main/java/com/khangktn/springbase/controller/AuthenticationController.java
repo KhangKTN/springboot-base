@@ -1,16 +1,20 @@
 package com.khangktn.springbase.controller;
 
-import com.khangktn.springbase.dto.request.ApiResponse;
-import com.khangktn.springbase.dto.request.AuthenticationRequest;
-import com.khangktn.springbase.dto.response.AuthenticationResponse;
-import com.khangktn.springbase.service.AuthenticationService;
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.khangktn.springbase.dto.request.ApiResponse;
+import com.khangktn.springbase.dto.request.AuthenticationRequest;
+import com.khangktn.springbase.dto.request.ObserveRequest;
+import com.khangktn.springbase.dto.response.AuthenticationResponse;
+import com.khangktn.springbase.dto.response.ObserveResponse;
+import com.khangktn.springbase.service.AuthenticationService;
+
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 
 @RestController
 @RequestMapping("/auth")
@@ -20,11 +24,18 @@ public class AuthenticationController {
     AuthenticationService authenticationService;
 
     @PostMapping("/login")
-    ApiResponse<AuthenticationResponse> authentication(@RequestBody AuthenticationRequest request){
-        boolean result = authenticationService.authentication(request);
+    ApiResponse<AuthenticationResponse> authentication(final @RequestBody AuthenticationRequest request){
+        AuthenticationResponse authenticationResp = authenticationService.authentication(request);
         return ApiResponse.<AuthenticationResponse>builder()
-                .result(AuthenticationResponse.builder()
-                        .authenticated(result).build())
+                .result(authenticationResp)
                 .build();
+    }
+
+    @PostMapping("/observe")
+    public ApiResponse<ObserveResponse> observeToken(final @RequestBody ObserveRequest observeRequest) {
+        ObserveResponse observeResponse = authenticationService.observe(observeRequest);
+        return ApiResponse.<ObserveResponse>builder()
+            .result(observeResponse)
+            .build();
     }
 }

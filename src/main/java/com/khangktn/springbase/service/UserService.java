@@ -27,43 +27,40 @@ public class UserService {
     UserRepository userRepository;
     UserMapper userMapper;
 
-    public User createUser(UserCreationRequest userCreationRequest){
+    public User createUser(final UserCreationRequest userCreationRequest){
         if(userRepository.existsByUsername(userCreationRequest.getUsername()))
             throw new AppException(ErrorCode.USER_EXIST);
 
-        User user = userMapper.toUser(userCreationRequest);
-        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
+        final User user = userMapper.toUser(userCreationRequest);
+        final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
         user.setPassword(passwordEncoder.encode(userCreationRequest.getPassword()));
 
         return userRepository.save(user);
     }
 
     public List<UserResponse> getUsers(){
-        // List<User> userList = userRepository.findAll();
-        // List<UserResponse> userResponseList = new ArrayList<>();
-
-        // for (User user : userList) {
-        //     userResponseList.add(userMapper.toUserResponse(user));
-        // }
-
-        return userRepository.findAll().stream()
-            .map(userMapper::toUserResponse)
-            .collect(Collectors.toList());
+        return userRepository.findAll()
+                .stream()
+                .map(userMapper::toUserResponse)
+                .collect(Collectors.toList());
     }
 
-    public UserResponse getUser(String id) {
-        return userMapper.toUserResponse(userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found")));
+    public UserResponse getUser(final String id) {
+        final User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return userMapper.toUserResponse(user);
     }
 
-    public UserResponse updateUser(UserUpdateRequest request, String id){
-        User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
+    public UserResponse updateUser(final UserUpdateRequest request, final String userId){
+        final User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
         userMapper.updateUser(user, request);
         return userMapper.toUserResponse(userRepository.save(user));
     }
 
-    public void deleteUser(String userId){
-        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+    public void deleteUser(final String userId){
+        final User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
         userRepository.delete(user);
     }
 }

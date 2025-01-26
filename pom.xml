@@ -71,23 +71,12 @@
 			<artifactId>spring-security-crypto</artifactId>
 		</dependency>
 
-		<!-- Help Spring readble file .jsp instead .html -->
+		<!-- https://mvnrepository.com/artifact/com.nimbusds/nimbus-jose-jwt -->
 		<dependency>
-			<groupId>org.apache.tomcat.embed</groupId>
-			<artifactId>tomcat-embed-jasper</artifactId>
+			<groupId>com.nimbusds</groupId>
+			<artifactId>nimbus-jose-jwt</artifactId>
+			<version>9.31</version>
 		</dependency>
-
-		<!-- JSTL for file .jsp -->
-		<dependency>
-			<groupId>jakarta.servlet.jsp.jstl</groupId>
-			<artifactId>jakarta.servlet.jsp.jstl-api</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>org.glassfish.web</groupId>
-			<artifactId>jakarta.servlet.jsp.jstl</artifactId>
-		</dependency>
-		<!-- End> JSTL for file jsp -->
 	</dependencies>
 
 	<build>
