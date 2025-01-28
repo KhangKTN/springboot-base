@@ -25,7 +25,7 @@ public class AuthenticationController {
 
     @PostMapping("/login")
     ApiResponse<AuthenticationResponse> authentication(final @RequestBody AuthenticationRequest request){
-        AuthenticationResponse authenticationResp = authenticationService.authentication(request);
+        final AuthenticationResponse authenticationResp = authenticationService.authentication(request);
         return ApiResponse.<AuthenticationResponse>builder()
                 .result(authenticationResp)
                 .build();
@@ -33,7 +33,7 @@ public class AuthenticationController {
 
     @PostMapping("/observe")
     public ApiResponse<ObserveResponse> observeToken(final @RequestBody ObserveRequest observeRequest) {
-        ObserveResponse observeResponse = authenticationService.observe(observeRequest);
+        final ObserveResponse observeResponse = authenticationService.observe(observeRequest);
         return ApiResponse.<ObserveResponse>builder()
             .result(observeResponse)
             .build();

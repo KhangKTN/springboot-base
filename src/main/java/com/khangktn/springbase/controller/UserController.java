@@ -30,14 +30,14 @@ import lombok.experimental.FieldDefaults;
 public class UserController {
     UserService userService;
 
-    @PostMapping
+    @PostMapping("")
     ApiResponse<User> createUser(@RequestBody @Valid UserCreationRequest request){
         ApiResponse<User> apiResponse = new ApiResponse<>();
         apiResponse.setResult(userService.createUser(request));
         return apiResponse;
     }
 
-    @GetMapping
+    @GetMapping("")
     List<UserResponse> getUsers(){
         return userService.getUsers();
     }
