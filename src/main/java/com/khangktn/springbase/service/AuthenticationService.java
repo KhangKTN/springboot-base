@@ -3,11 +3,13 @@ package com.khangktn.springbase.service;
 import java.text.ParseException;
 import java.time.Instant;
 import java.util.Date;
+import java.util.StringJoiner;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import com.khangktn.springbase.dto.request.AuthenticationRequest;
 import com.khangktn.springbase.dto.request.ObserveRequest;
@@ -39,8 +41,7 @@ import lombok.experimental.NonFinal;
 public class AuthenticationService {
     UserRepository userRepository;
 
-    // After 1 day, token will expire
-    private static final int EXPIRATION_TIME_SECOND = 1 * 60 * 60;
+    private static final int ONE_DAY_SECONDS = 1 * 60 * 60;
 
     @NonFinal
     @Value("${jwt.signerKey}")
@@ -61,7 +62,7 @@ public class AuthenticationService {
         if (!authenticated) {
             throw new AppException(ErrorCode.UNAUTHENTICATED);
         }
-        final String accessToken = generateToken(username);
+        final String accessToken = generateToken(userDb);
 
         return AuthenticationResponse.builder()
                 .authenticated(authenticated)
@@ -73,14 +74,14 @@ public class AuthenticationService {
      * @param username
      * @return
      */
-    private String generateToken(String username) {
+    private String generateToken(User user) {
         final JWSHeader jwsHeader = new JWSHeader(JWSAlgorithm.HS512);
         final JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
-                .subject(username)
+                .subject(user.getUsername())
                 .issuer("khangktn") // Domain
                 .issueTime(new Date())
-                .expirationTime(new Date(Instant.now().plusSeconds(EXPIRATION_TIME_SECOND).toEpochMilli()))
-                .claim("userId", "custom")
+                .expirationTime(new Date(Instant.now().plusSeconds(ONE_DAY_SECONDS).toEpochMilli()))
+                .claim("scope", buildScope(user))
                 .build();
         final Payload payload = new Payload(jwtClaimsSet.toJSONObject());
         final JWSObject jwsObject = new JWSObject(jwsHeader, payload);
@@ -96,7 +97,7 @@ public class AuthenticationService {
     /**
      * Verify token
      * @param observeRequest
-     * @return
+     * @return 
      */
     public ObserveResponse observe(final ObserveRequest observeRequest) {
         final String token = observeRequest.getToken();
@@ -114,5 +115,13 @@ public class AuthenticationService {
         } catch (JOSEException | ParseException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private String buildScope(final User user) {
+        final StringJoiner stringJoiner = new StringJoiner(" ");
+        if (!CollectionUtils.isEmpty(user.getRoles())) {
+            user.getRoles().forEach(role -> stringJoiner.add(role));
+        }
+        return stringJoiner.toString();
     }
 }

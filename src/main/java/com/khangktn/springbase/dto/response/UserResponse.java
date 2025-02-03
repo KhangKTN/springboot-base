@@ -1,6 +1,7 @@
 package com.khangktn.springbase.dto.response;
 
 import java.time.LocalDate;
+import java.util.Set;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -19,8 +20,8 @@ import lombok.experimental.FieldDefaults;
 public class UserResponse {
     String id;
     String username;
-    String password;
     String firstName;
     String lastName;
     LocalDate dob;
+    Set<String> roles;
 }
