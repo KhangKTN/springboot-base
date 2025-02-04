@@ -5,18 +5,21 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.khangktn.springbase.mapper.UserMapper;
+import org.springframework.security.access.prepost.PostAuthorize;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.khangktn.springbase.enums.Role;
 import com.khangktn.springbase.dto.request.UserCreationRequest;
 import com.khangktn.springbase.dto.request.UserUpdateRequest;
 import com.khangktn.springbase.dto.response.UserResponse;
 import com.khangktn.springbase.entity.User;
+import com.khangktn.springbase.enums.Role;
 import com.khangktn.springbase.exception.AppException;
 import com.khangktn.springbase.exception.ErrorCode;
+import com.khangktn.springbase.mapper.UserMapper;
 import com.khangktn.springbase.repository.UserRepository;
 
 import lombok.AccessLevel;
@@ -30,8 +33,8 @@ public class UserService {
     UserRepository userRepository;
     UserMapper userMapper;
 
-    public UserResponse createUser(final UserCreationRequest userCreationRequest){
-        if(userRepository.existsByUsername(userCreationRequest.getUsername()))
+    public UserResponse createUser(final UserCreationRequest userCreationRequest) {
+        if (userRepository.existsByUsername(userCreationRequest.getUsername()))
             throw new AppException(ErrorCode.USER_EXIST);
 
         final User user = userMapper.toUser(userCreationRequest);
@@ -41,31 +44,40 @@ public class UserService {
         Set<String> roles = new HashSet<>();
         roles.add(Role.USER.name());
         user.setRoles(roles);
-        
+
         return userMapper.toUserResponse(userRepository.save(user));
     }
 
-    public List<UserResponse> getUsers(){
+    @PreAuthorize("hasRole('ADMIN')") // Check Authorize before call function
+    public List<UserResponse> getUserList() {
         return userRepository.findAll()
                 .stream()
                 .map(userMapper::toUserResponse)
                 .collect(Collectors.toList());
     }
 
+    @PostAuthorize("returnObject.username == authentication.name") 
     public UserResponse getUser(final String id) {
         final User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         return userMapper.toUserResponse(user);
     }
 
-    public UserResponse updateUser(final UserUpdateRequest request, final String userId){
+    public UserResponse getCurrentProfile() {
+        final String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        return userMapper.toUserResponse(
+                userRepository.findByUsername(username)
+                        .orElseThrow(() -> new RuntimeException("User not found!")));
+    }
+
+    public UserResponse updateUser(final UserUpdateRequest request, final String userId) {
         final User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         userMapper.updateUser(user, request);
         return userMapper.toUserResponse(userRepository.save(user));
     }
 
-    public void deleteUser(final String userId){
+    public void deleteUser(final String userId) {
         final User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         userRepository.delete(user);
