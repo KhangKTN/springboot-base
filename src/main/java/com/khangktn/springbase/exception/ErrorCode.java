@@ -1,27 +1,28 @@
 package com.khangktn.springbase.exception;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+
+import lombok.Getter;
+
+@Getter
 public enum ErrorCode {
-    UNCATEGORIZED_EXCEPTION(9999, "Uncategorized error!"),
-    INVALID_KEY(1001, "Invalid message key"),
-    USER_EXIST(1002, "User is exist!"),
-    USERNAME_INVALID(1003, "Username must be at least 3 characters!"),
-    PASSWORD_INVALID(1004, "Password must be at least 4 characters!"),
-    USER_NOT_EXIST(1005, "User isn't exist!"),
-    UNAUTHENTICATED(1006, "User unauthenticated")
+    UNCATEGORIZED_EXCEPTION(9999, "Uncategorized error!", HttpStatus.INTERNAL_SERVER_ERROR),
+    INVALID_KEY(1001, "Invalid message key", HttpStatus.BAD_REQUEST),
+    USER_EXIST(1002, "User is exist!", HttpStatus.BAD_REQUEST),
+    USERNAME_INVALID(1003, "Username must be at least 3 characters!", HttpStatus.BAD_REQUEST),
+    PASSWORD_INVALID(1004, "Password must be at least 4 characters!", HttpStatus.BAD_REQUEST),
+    USER_NOT_EXIST(1005, "User isn't exist!", HttpStatus.NOT_FOUND),
+    UNAUTHENTICATED(1006, "User unauthenticated", HttpStatus.UNAUTHORIZED),
+    UNAUTHORIZED(1007, "You do not have permission", HttpStatus.FORBIDDEN)
     ;
     private int code;
     private String message;
+    private HttpStatusCode statusCode;
 
-    ErrorCode(int code, String message) {
+    ErrorCode(int code, String message, HttpStatusCode statusCode) {
         this.code = code;
         this.message = message;
-    }
-
-    public int getCode() {
-        return code;
-    }
-
-    public String getMessage() {
-        return message;
+        this.statusCode = statusCode;
     }
 }
