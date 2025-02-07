@@ -1,10 +1,10 @@
-package com.khangktn.springbase.dto.response;
+package com.khangktn.springbase.entity;
 
-import java.time.LocalDate;
 import java.util.Set;
 
-import com.khangktn.springbase.entity.Role;
-
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToMany;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,20 +15,17 @@ import lombok.experimental.FieldDefaults;
 
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class UserResponse {
-    String id;
-
-    String username;
-
-    String firstName;
+@Entity
+public class Role {
+    @Id
+    String name;
     
-    String lastName;
+    String description;
 
-    LocalDate dob;
-
-    Set<Role> roles;
+    @ManyToMany
+    Set<Permission> permissionSet;
 }

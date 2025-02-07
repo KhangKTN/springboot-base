@@ -28,13 +28,13 @@ public class ApplicationInitConfig {
             final boolean hasUserRoleAdmin = userRepository.findByUsername("ADMIN").isPresent();
 
             if (!hasUserRoleAdmin) {
-                final Set<String> roles = new HashSet<>();
-                roles.add(Role.ADMIN.name());
+                final Set<Role> roles = new HashSet<>();
+                // roles.add(Role.ADMIN.name());
 
                 final User user = User.builder()
                         .username("admin")
                         .password(passwordEncoder.encode("admin"))
-                        .roles(roles)
+                        // .roles(roles)
                         .build();
 
                 userRepository.save(user);

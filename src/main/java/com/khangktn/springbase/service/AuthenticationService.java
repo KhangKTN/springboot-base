@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 
 import com.khangktn.springbase.dto.request.AuthenticationRequest;
 import com.khangktn.springbase.dto.request.ObserveRequest;
@@ -119,9 +118,9 @@ public class AuthenticationService {
 
     private String buildScope(final User user) {
         final StringJoiner stringJoiner = new StringJoiner(" ");
-        if (!CollectionUtils.isEmpty(user.getRoles())) {
-            user.getRoles().forEach(role -> stringJoiner.add(role));
-        }
+        // if (!CollectionUtils.isEmpty(user.getRoles())) {
+        //     user.getRoles().forEach(role -> stringJoiner.add(role));
+        // }
         return stringJoiner.toString();
     }
 }
