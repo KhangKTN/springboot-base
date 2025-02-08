@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.khangktn.springbase.dto.request.RoleRequest;
 import com.khangktn.springbase.dto.response.RoleResponse;
@@ -25,10 +26,11 @@ public class RoleService {
     RoleRepository roleRepository;
     PermissionRepository permissionRepository;
 
+    @Transactional(rollbackFor = Exception.class)
     public RoleResponse create(final RoleRequest roleRequest) {
         final Role role = roleMapper.toRole(roleRequest);
-        final List<Permission> permissionSet = permissionRepository.findAllById(roleRequest.getPermissionSet());
-        role.setPermissionSet(new HashSet<>(permissionSet));
+        final List<Permission> permissionList = permissionRepository.findAllById(roleRequest.getPermissionSet());
+        role.setPermissionSet(new HashSet<>(permissionList));
 
         final Role roleSave = roleRepository.save(role);
         return roleMapper.toRoleResponse(roleSave);
@@ -42,6 +44,7 @@ public class RoleService {
         return roleResponseList;
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public boolean delete(final String name) {
         final boolean isExistRole = roleRepository.existsById(name);
         if (!isExistRole) {

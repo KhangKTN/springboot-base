@@ -1,6 +1,7 @@
 package com.khangktn.springbase.dto.request;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -21,4 +22,5 @@ public class UserUpdateRequest {
     private String firstName;
     private String lastName;
     private LocalDate dob;
+    List<String> roles;
 }

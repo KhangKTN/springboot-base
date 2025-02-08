@@ -3,17 +3,20 @@ package com.khangktn.springbase.service;
 import java.text.ParseException;
 import java.time.Instant;
 import java.util.Date;
+import java.util.Set;
 import java.util.StringJoiner;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import com.khangktn.springbase.dto.request.AuthenticationRequest;
 import com.khangktn.springbase.dto.request.ObserveRequest;
 import com.khangktn.springbase.dto.response.AuthenticationResponse;
 import com.khangktn.springbase.dto.response.ObserveResponse;
+import com.khangktn.springbase.entity.Permission;
 import com.khangktn.springbase.entity.User;
 import com.khangktn.springbase.exception.AppException;
 import com.khangktn.springbase.exception.ErrorCode;
@@ -48,8 +51,8 @@ public class AuthenticationService {
 
     /**
      * Authentication user
-     * @param request
-     * @return 
+     * @param request AuthenticationRequest
+     * @return AuthenticationResponse
      */
     public AuthenticationResponse authentication(final AuthenticationRequest request) {
         final String username = request.getUsername();
@@ -70,14 +73,14 @@ public class AuthenticationService {
     }
 
     /**
-     * @param username
-     * @return
+     * @param username User
+     * @return string token
      */
     private String generateToken(User user) {
         final JWSHeader jwsHeader = new JWSHeader(JWSAlgorithm.HS512);
         final JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
                 .subject(user.getUsername())
-                .issuer("khangktn") // Domain
+                .issuer("khangktn.com") // Domain
                 .issueTime(new Date())
                 .expirationTime(new Date(Instant.now().plusSeconds(ONE_DAY_SECONDS).toEpochMilli()))
                 .claim("scope", buildScope(user))
@@ -94,9 +97,10 @@ public class AuthenticationService {
     }
 
     /**
-     * Verify token
-     * @param observeRequest
-     * @return 
+     * Verify the token
+     * 
+     * @param observeRequest ObserveRequest
+     * @return ObserveResponse
      */
     public ObserveResponse observe(final ObserveRequest observeRequest) {
         final String token = observeRequest.getToken();
@@ -116,11 +120,24 @@ public class AuthenticationService {
         }
     }
 
+    /**
+     * Build String contain list Role and Permission separated space character
+     * 
+     * @param user User
+     * @return String value of list Role and Permission
+     */
     private String buildScope(final User user) {
         final StringJoiner stringJoiner = new StringJoiner(" ");
-        // if (!CollectionUtils.isEmpty(user.getRoles())) {
-        //     user.getRoles().forEach(role -> stringJoiner.add(role));
-        // }
+        
+        if (!CollectionUtils.isEmpty(user.getRoles())) {
+            user.getRoles().forEach(role -> {
+                stringJoiner.add("ROLE_" + role.getName());
+                final Set<Permission> permissionSet = role.getPermissionSet();
+                if (!CollectionUtils.isEmpty(permissionSet)) {
+                    permissionSet.forEach(permission -> stringJoiner.add(permission.getName()));
+                }
+            });
+        }
         return stringJoiner.toString();
     }
 }

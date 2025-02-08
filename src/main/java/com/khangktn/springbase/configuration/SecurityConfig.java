@@ -47,13 +47,16 @@ public class SecurityConfig {
     }
 
     /**
-     * Customize authority prefix to [ROLE_] instead of [SCOPE_]
-     * @return
+     * Customize authority prefix to 'ROLE_' instead of 'SCOPE_'
+     * @return JwtAuthenticationConverter
      */
     @Bean
     JwtAuthenticationConverter jwtAuthenticationConverter() {
         final JwtGrantedAuthoritiesConverter jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
-        jwtGrantedAuthoritiesConverter.setAuthorityPrefix("ROLE_");
+        // jwtGrantedAuthoritiesConverter.setAuthorityPrefix("ROLE_");
+
+         // Do not add prefix 'ROLE_' because has been handle in class AuthenticationService, method buildScope
+        jwtGrantedAuthoritiesConverter.setAuthorityPrefix("");
 
         final JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
         jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwtGrantedAuthoritiesConverter);

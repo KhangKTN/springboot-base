@@ -3,8 +3,6 @@ package com.khangktn.springbase.dto.response;
 import java.time.LocalDate;
 import java.util.Set;
 
-import com.khangktn.springbase.entity.Role;
-
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -30,5 +28,5 @@ public class UserResponse {
 
     LocalDate dob;
 
-    Set<Role> roles;
+    Set<RoleResponse> roles;
 }

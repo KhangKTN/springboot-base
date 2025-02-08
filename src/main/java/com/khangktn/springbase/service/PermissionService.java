@@ -34,10 +34,17 @@ public class PermissionService {
         final List<Permission> permissionList = permissionListRequest.getPermissionList().stream()
                 .map(permissionMapper::toPermission)
                 .toList();
-        final List<String> permissionIdList = permissionList.stream().map(Permission::getName).toList();
-        final List<Permission> permissionInDbList = permissionRepository.findAllById(permissionIdList);
-        final List<Permission> permissionListSave = permissionRepository.saveAll(permissionList);
-        return permissionListSave.stream()
+        final List<String> permissionNameList = permissionList.stream().map(Permission::getName).toList();
+        final List<Permission> permissionDbList = permissionRepository.findAllById(permissionNameList);
+        final List<String> permissionNameDbList = permissionDbList.stream().map(Permission::getName).toList();
+
+        // Filter list permission not exist in DB to save 
+        final List<Permission> permissionPrepareList =  permissionList.stream()
+            .filter(e -> !permissionNameDbList.contains(e.getName()))
+            .toList();
+
+        final List<Permission> permissionPersistList = permissionRepository.saveAll(permissionPrepareList);
+        return permissionPersistList.stream()
                 .map(permissionMapper::toPermissionResponse)
                 .toList();
     }
@@ -50,6 +57,7 @@ public class PermissionService {
         return permissionResponseList;
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public boolean delete(final String name) {
         final boolean isExistPermission = permissionRepository.existsById(name);
         if (!isExistPermission) {
