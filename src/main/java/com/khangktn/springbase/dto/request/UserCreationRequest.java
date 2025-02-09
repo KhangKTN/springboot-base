@@ -3,6 +3,8 @@ package com.khangktn.springbase.dto.request;
 import java.time.LocalDate;
 import java.util.List;
 
+import com.khangktn.springbase.validator.DateOfBirthConstrain;
+
 import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -19,7 +21,7 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserCreationRequest {
-    @Size(min = 3, message = "USERNAME_INVALID")
+    @Size(min = 3, max = 20, message = "USERNAME_INVALID")
     String username;
 
     @Size(min = 4, message = "PASSWORD_INVALID")
@@ -29,6 +31,7 @@ public class UserCreationRequest {
 
     String lastName;
     
+    @DateOfBirthConstrain(min = 18, message = "DOB_INVALID")
     LocalDate dob;
 
     List<String> roles;
