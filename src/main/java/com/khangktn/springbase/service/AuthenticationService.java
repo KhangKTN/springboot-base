@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.Set;
 import java.util.StringJoiner;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -13,13 +14,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import com.khangktn.springbase.dto.request.AuthenticationRequest;
+import com.khangktn.springbase.dto.request.LogoutRequest;
 import com.khangktn.springbase.dto.request.ObserveRequest;
 import com.khangktn.springbase.dto.response.AuthenticationResponse;
 import com.khangktn.springbase.dto.response.ObserveResponse;
+import com.khangktn.springbase.entity.ExpiredToken;
 import com.khangktn.springbase.entity.Permission;
 import com.khangktn.springbase.entity.User;
 import com.khangktn.springbase.exception.AppException;
 import com.khangktn.springbase.exception.ErrorCode;
+import com.khangktn.springbase.repository.ExpiredRepository;
 import com.khangktn.springbase.repository.UserRepository;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
@@ -36,14 +40,18 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Slf4j
 public class AuthenticationService {
     UserRepository userRepository;
 
-    private static final int ONE_DAY_SECONDS = 1 * 60 * 60;
+    ExpiredRepository expiredRepository;
+
+    static int ONE_DAY_SECONDS = 1 * 60 * 60;
 
     @NonFinal
     @Value("${jwt.signerKey}")
@@ -73,6 +81,8 @@ public class AuthenticationService {
     }
 
     /**
+     * Generate access token
+     * 
      * @param username User
      * @return string token
      */
@@ -83,6 +93,7 @@ public class AuthenticationService {
                 .issuer("khangktn.com") // Domain
                 .issueTime(new Date())
                 .expirationTime(new Date(Instant.now().plusSeconds(ONE_DAY_SECONDS).toEpochMilli()))
+                .jwtID(UUID.randomUUID().toString())
                 .claim("scope", buildScope(user))
                 .build();
         final Payload payload = new Payload(jwtClaimsSet.toJSONObject());
@@ -97,27 +108,25 @@ public class AuthenticationService {
     }
 
     /**
-     * Verify the token
+     * Confirm token isValid
      * 
      * @param observeRequest ObserveRequest
      * @return ObserveResponse
      */
     public ObserveResponse observe(final ObserveRequest observeRequest) {
         final String token = observeRequest.getToken();
+
+        // If token invalid, then throw AppException
+        boolean isValid = true;
         try {
-            final SignedJWT signedJWT = SignedJWT.parse(token);
-            final JWSVerifier jwsVerifier = new MACVerifier(SIGNER_KEY.getBytes());
-
-            final boolean isVerified = signedJWT.verify(jwsVerifier);
-            final Date expiredTime = signedJWT.getJWTClaimsSet().getExpirationTime();
-            final boolean isExprired = expiredTime.before(new Date());
-
-            return ObserveResponse.builder()
-                    .isValid(isVerified && !isExprired)
-                    .build();
-        } catch (JOSEException | ParseException e) {
-            throw new RuntimeException(e);
+            verifyToken(token);
+        } catch (AppException e) {
+            isValid = false; 
         }
+
+        return ObserveResponse.builder()
+                .isValid(isValid)
+                .build();
     }
 
     /**
@@ -139,5 +148,48 @@ public class AuthenticationService {
             });
         }
         return stringJoiner.toString();
+    }
+
+    public void logout(final LogoutRequest logoutRequest) {
+        try {
+            final SignedJWT signedJWT = verifyToken(logoutRequest.getToken());
+            final String jwtId = signedJWT.getJWTClaimsSet().getJWTID();
+            final ExpiredToken expiredToken = ExpiredToken.builder()
+                    .id(jwtId)
+                    .expiryTime(signedJWT.getJWTClaimsSet().getExpirationTime())
+                    .build();
+            expiredRepository.save(expiredToken);
+        } catch (ParseException e) {
+            log.error(e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Verify token and check DB if token is expired
+     * 
+     * @param token
+     * @return signJwt
+     */
+    private SignedJWT verifyToken(final String token) {
+        try {
+            final SignedJWT signedJWT = SignedJWT.parse(token);
+            final JWSVerifier jwsVerifier = new MACVerifier(SIGNER_KEY.getBytes());
+
+            final Date expiredTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+            final boolean verified = signedJWT.verify(jwsVerifier);
+
+            if (!(verified && expiredTime.after(new Date()))) {
+                throw new AppException(ErrorCode.UNAUTHENTICATED);
+            }
+
+            final boolean isExistsExpiredToken = expiredRepository.existsById(signedJWT.getJWTClaimsSet().getJWTID());
+            if (isExistsExpiredToken) {
+                throw new AppException(ErrorCode.UNAUTHENTICATED);
+            }
+
+            return signedJWT;
+        } catch (JOSEException | ParseException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
