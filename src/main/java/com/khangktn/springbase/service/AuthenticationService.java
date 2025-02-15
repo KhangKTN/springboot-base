@@ -16,6 +16,7 @@ import org.springframework.util.CollectionUtils;
 import com.khangktn.springbase.dto.request.AuthenticationRequest;
 import com.khangktn.springbase.dto.request.LogoutRequest;
 import com.khangktn.springbase.dto.request.ObserveRequest;
+import com.khangktn.springbase.dto.request.RefreshTokenRequest;
 import com.khangktn.springbase.dto.response.AuthenticationResponse;
 import com.khangktn.springbase.dto.response.ObserveResponse;
 import com.khangktn.springbase.entity.ExpiredToken;
@@ -190,6 +191,32 @@ public class AuthenticationService {
             return signedJWT;
         } catch (JOSEException | ParseException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public String refreshToken(final RefreshTokenRequest request) {
+        // Check token is valid
+        final SignedJWT signedJWT = verifyToken(request.getToken());
+        
+        try {
+            // Make current token invalid
+            final String jwtId = signedJWT.getJWTClaimsSet().getJWTID();
+            final ExpiredToken expiredToken = ExpiredToken.builder()
+                    .id(jwtId)
+                    .expiryTime(signedJWT.getJWTClaimsSet().getExpirationTime())
+                    .build();
+            expiredRepository.save(expiredToken);
+
+            // Generate new token
+            final String username = signedJWT.getJWTClaimsSet().getSubject();
+            final User user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXIST));
+            final String newToken = generateToken(user);
+
+            return newToken;
+        } catch (ParseException e) {
+            log.error("Parse token occur error: ", e.getMessage());
+            throw new RuntimeException(e.getMessage());
         }
     }
 }

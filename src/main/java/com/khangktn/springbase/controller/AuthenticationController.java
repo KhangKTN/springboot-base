@@ -9,8 +9,10 @@ import com.khangktn.springbase.dto.request.ApiResponse;
 import com.khangktn.springbase.dto.request.AuthenticationRequest;
 import com.khangktn.springbase.dto.request.LogoutRequest;
 import com.khangktn.springbase.dto.request.ObserveRequest;
+import com.khangktn.springbase.dto.request.RefreshTokenRequest;
 import com.khangktn.springbase.dto.response.AuthenticationResponse;
 import com.khangktn.springbase.dto.response.ObserveResponse;
+import com.khangktn.springbase.dto.response.RefreshTokenResponse;
 import com.khangktn.springbase.service.AuthenticationService;
 
 import lombok.AccessLevel;
@@ -25,7 +27,7 @@ public class AuthenticationController {
     AuthenticationService authenticationService;
 
     @PostMapping("/login")
-    ApiResponse<AuthenticationResponse> authentication(final @RequestBody AuthenticationRequest request){
+    ApiResponse<AuthenticationResponse> authentication(@RequestBody final AuthenticationRequest request){
         final AuthenticationResponse authenticationResp = authenticationService.authentication(request);
         return ApiResponse.<AuthenticationResponse>builder()
                 .result(authenticationResp)
@@ -33,7 +35,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/observe")
-    public ApiResponse<ObserveResponse> observeToken(final @RequestBody ObserveRequest observeRequest) {
+    public ApiResponse<ObserveResponse> observeToken(@RequestBody final ObserveRequest observeRequest) {
         final ObserveResponse observeResponse = authenticationService.observe(observeRequest);
         return ApiResponse.<ObserveResponse>builder()
             .result(observeResponse)
@@ -41,9 +43,18 @@ public class AuthenticationController {
     }
 
     @PostMapping("/logout")
-    public ApiResponse<Void> logout(final @RequestBody LogoutRequest logoutRequest) {
+    public ApiResponse<Void> logout(@RequestBody final LogoutRequest logoutRequest) {
         authenticationService.logout(logoutRequest);
         return ApiResponse.<Void>builder().build();
     }
     
+    @PostMapping("/refresh")
+    public ApiResponse<RefreshTokenResponse> getNewToken(@RequestBody final RefreshTokenRequest request) {
+        final RefreshTokenResponse response = RefreshTokenResponse.builder()
+                .token(authenticationService.refreshToken(request))
+                .build();
+        return ApiResponse.<RefreshTokenResponse>builder()
+                .result(response)
+                .build();
+    }
 }

@@ -60,6 +60,7 @@ public class SecurityConfig {
         return jwtAuthenticationConverter;
     }
 
+    // This method cancel because implement class custom JwtDecoder
     /* @Bean
     JwtDecoder jwtDecoder() {
         final SecretKeySpec secretKeySpec = new SecretKeySpec(signerKey.getBytes(), JWSAlgorithm.HS512.getName());
