@@ -58,6 +58,14 @@ public class AuthenticationService {
     @Value("${jwt.signerKey}")
     private String SIGNER_KEY;
 
+    @NonFinal
+    @Value("${jwt.valid-duration}")
+    private long VALID_DURATION;
+
+    @NonFinal
+    @Value("${jwt.refreshable-duration}")
+    private long REFRESHABLE_DURATION;
+
     /**
      * Authentication user
      * @param request AuthenticationRequest
@@ -93,7 +101,7 @@ public class AuthenticationService {
                 .subject(user.getUsername())
                 .issuer("khangktn.com") // Domain
                 .issueTime(new Date())
-                .expirationTime(new Date(Instant.now().plusSeconds(ONE_DAY_SECONDS).toEpochMilli()))
+                .expirationTime(new Date(Instant.now().plusSeconds(VALID_DURATION).toEpochMilli()))
                 .jwtID(UUID.randomUUID().toString())
                 .claim("scope", buildScope(user))
                 .build();
@@ -120,7 +128,7 @@ public class AuthenticationService {
         // If token invalid, then throw AppException
         boolean isValid = true;
         try {
-            verifyToken(token);
+            verifyToken(token, false);
         } catch (AppException e) {
             isValid = false; 
         }
@@ -153,15 +161,18 @@ public class AuthenticationService {
 
     public void logout(final LogoutRequest logoutRequest) {
         try {
-            final SignedJWT signedJWT = verifyToken(logoutRequest.getToken());
+            final SignedJWT signedJWT = verifyToken(logoutRequest.getToken(), true);
             final String jwtId = signedJWT.getJWTClaimsSet().getJWTID();
             final ExpiredToken expiredToken = ExpiredToken.builder()
                     .id(jwtId)
-                    .expiryTime(signedJWT.getJWTClaimsSet().getExpirationTime())
+                    .expiryTime(new Date(signedJWT.getJWTClaimsSet().getIssueTime().toInstant()
+                            .plusSeconds(REFRESHABLE_DURATION).toEpochMilli()))
                     .build();
             expiredRepository.save(expiredToken);
         } catch (ParseException e) {
-            log.error(e.getMessage(), e);
+            log.error("Parse token error: " + e.getMessage(), e);
+        } catch (AppException e) {
+            log.info("Token expired!");
         }
     }
 
@@ -171,12 +182,18 @@ public class AuthenticationService {
      * @param token
      * @return signJwt
      */
-    private SignedJWT verifyToken(final String token) {
+    private SignedJWT verifyToken(final String token, final boolean isRefresh) {
         try {
             final SignedJWT signedJWT = SignedJWT.parse(token);
             final JWSVerifier jwsVerifier = new MACVerifier(SIGNER_KEY.getBytes());
 
-            final Date expiredTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+            final Date expiredTime;
+            if (isRefresh) {
+                expiredTime = new Date(signedJWT.getJWTClaimsSet().getIssueTime()
+                        .toInstant().plusSeconds(REFRESHABLE_DURATION).toEpochMilli());
+            } else {
+                expiredTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+            }
             final boolean verified = signedJWT.verify(jwsVerifier);
 
             if (!(verified && expiredTime.after(new Date()))) {
@@ -196,7 +213,7 @@ public class AuthenticationService {
 
     public String refreshToken(final RefreshTokenRequest request) {
         // Check token is valid
-        final SignedJWT signedJWT = verifyToken(request.getToken());
+        final SignedJWT signedJWT = verifyToken(request.getToken(), true);
         
         try {
             // Make current token invalid
