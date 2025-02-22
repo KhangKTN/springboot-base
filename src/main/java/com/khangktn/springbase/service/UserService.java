@@ -1,15 +1,5 @@
 package com.khangktn.springbase.service;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.springframework.security.access.prepost.PostAuthorize;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-
 import com.khangktn.springbase.dto.request.UserCreationRequest;
 import com.khangktn.springbase.dto.request.UserUpdateRequest;
 import com.khangktn.springbase.dto.response.UserResponse;
@@ -20,14 +10,24 @@ import com.khangktn.springbase.exception.ErrorCode;
 import com.khangktn.springbase.mapper.UserMapper;
 import com.khangktn.springbase.repository.RoleRepository;
 import com.khangktn.springbase.repository.UserRepository;
-
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PostAuthorize;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Slf4j
 public class UserService {
     UserMapper userMapper;
     PasswordEncoder passwordEncoder;
@@ -41,8 +41,11 @@ public class UserService {
         final User user = userMapper.toUser(userCreationRequest);
         user.setPassword(passwordEncoder.encode(userCreationRequest.getPassword()));
 
-        final List<Role> roleList = roleRepository.findAllById(userCreationRequest.getRoles());
-        user.setRoles(new HashSet<>(roleList));
+        final List<String> roles = userCreationRequest.getRoles();
+        if (roles != null) {
+            final List<Role> roleList = roleRepository.findAllById(roles);
+            user.setRoles(new HashSet<>(roleList));
+        }
 
         return userMapper.toUserResponse(userRepository.save(user));
     }
@@ -55,7 +58,7 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
-    @PostAuthorize("returnObject.username == authentication.name") 
+    @PostAuthorize("returnObject.username == authentication.name")
     public UserResponse getUser(final String id) {
         final User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -72,7 +75,7 @@ public class UserService {
     public UserResponse updateUser(final UserUpdateRequest userRequest, final String userId) {
         final User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-                
+
         userMapper.updateUser(user, userRequest);
         user.setPassword(passwordEncoder.encode(userRequest.getPassword()));
         final List<Role> roleList = roleRepository.findAllById(userRequest.getRoles());
