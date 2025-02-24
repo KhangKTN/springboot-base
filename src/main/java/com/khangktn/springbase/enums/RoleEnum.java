@@ -1,6 +1,6 @@
 package com.khangktn.springbase.enums;
 
-public enum Role {
+public enum RoleEnum {
     ADMIN,
     USER
 }
