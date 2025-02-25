@@ -1,10 +1,8 @@
 package com.khangktn.springbase.service;
 
-import com.khangktn.springbase.dto.request.UserCreationRequest;
-import com.khangktn.springbase.dto.response.UserResponse;
-import com.khangktn.springbase.entity.User;
-import com.khangktn.springbase.exception.AppException;
-import com.khangktn.springbase.repository.UserRepository;
+import java.time.LocalDate;
+import java.util.Optional;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,9 +11,15 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.TestPropertySource;
 
-import java.time.LocalDate;
+import com.khangktn.springbase.dto.request.UserCreationRequest;
+import com.khangktn.springbase.dto.response.UserResponse;
+import com.khangktn.springbase.entity.User;
+import com.khangktn.springbase.exception.AppException;
+import com.khangktn.springbase.exception.ErrorCode;
+import com.khangktn.springbase.repository.UserRepository;
 
 @SpringBootTest
 @TestPropertySource("/test.properties")
@@ -80,12 +84,36 @@ public class UserServiceTest {
     void createUser_userExists_fail() {
         // GIVEN
         Mockito.when(userRepository.existsByUsername(ArgumentMatchers.anyString()))
-                .thenReturn(true);
+                        .thenReturn(true);
 
         // THEN
         final AppException appException = Assertions.assertThrows(AppException.class,
-                () -> userService.createUser(userCreationRequest));
+                        () -> userService.createUser(userCreationRequest));
         Assertions.assertEquals(appException.getMessage(), "User is exist!");
         Assertions.assertEquals(appException.getErrorCode().getCode(), 1002);
+    }
+
+    @Test
+    @WithMockUser(username = "khangktn-test")
+    void getCurrentProfile_valid_success() {
+        Mockito.when(userRepository.findByUsername(ArgumentMatchers.anyString()))
+                        .thenReturn(Optional.of(user));
+        final UserResponse userActual = userService.getCurrentProfile();
+        
+        Assertions.assertEquals(userActual.getUsername(), "khangktn-test");
+        Assertions.assertEquals(userActual.getFirstName(), "Khang");
+    }
+
+    @Test
+    @WithMockUser(username = "khangktn-test")
+    void getCurrentProfile_notFoundUser_fail() {
+        Mockito.when(userRepository.findByUsername(ArgumentMatchers.anyString()))
+                        .thenReturn((Optional.ofNullable(null)));
+        final AppException appException = Assertions.assertThrows(
+                AppException.class,
+                () -> userService.getCurrentProfile());
+
+        Assertions.assertEquals(ErrorCode.USER_NOT_EXIST.getCode(), 1005);
+        Assertions.assertEquals(ErrorCode.USER_NOT_EXIST.getMessage(), appException.getMessage());
     }
 }

@@ -1,5 +1,15 @@
 package com.khangktn.springbase.service;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.security.access.prepost.PostAuthorize;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
 import com.khangktn.springbase.dto.request.UserCreationRequest;
 import com.khangktn.springbase.dto.request.UserUpdateRequest;
 import com.khangktn.springbase.dto.response.UserResponse;
@@ -10,19 +20,11 @@ import com.khangktn.springbase.exception.ErrorCode;
 import com.khangktn.springbase.mapper.UserMapper;
 import com.khangktn.springbase.repository.RoleRepository;
 import com.khangktn.springbase.repository.UserRepository;
+
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.access.prepost.PostAuthorize;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-
-import java.util.HashSet;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -69,7 +71,7 @@ public class UserService {
         final String username = SecurityContextHolder.getContext().getAuthentication().getName();
         return userMapper.toUserResponse(
                 userRepository.findByUsername(username)
-                        .orElseThrow(() -> new RuntimeException("User not found!")));
+                        .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXIST)));
     }
 
     public UserResponse updateUser(final UserUpdateRequest userRequest, final String userId) {
