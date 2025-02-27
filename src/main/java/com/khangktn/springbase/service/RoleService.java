@@ -38,10 +38,9 @@ public class RoleService {
 
     public List<RoleResponse> getAll() {
         final List<Role> roleList = roleRepository.findAll();
-        final List<RoleResponse> roleResponseList = roleList.stream()
+        return roleList.stream()
                 .map(roleMapper::toRoleResponse)
                 .toList();
-        return roleResponseList;
     }
 
     @Transactional(rollbackFor = Exception.class)

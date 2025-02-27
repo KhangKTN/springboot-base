@@ -30,29 +30,26 @@ public class PermissionController {
     @PostMapping
     ApiResponse<PermissionResponse> create(@RequestBody final PermissionRequest permissionRequest) {
         final PermissionResponse permissionResponse = permissionService.create(permissionRequest);
-        final ApiResponse<PermissionResponse> response = ApiResponse.<PermissionResponse>builder()
+        return ApiResponse.<PermissionResponse>builder()
                 .result(permissionResponse)
                 .build();
-        return response;
     }
 
     @PostMapping("/bulk-insert")
     ApiResponse<List<PermissionResponse>> create(@RequestBody final PermissionListRequest permissionRequestList) {
         final List<PermissionResponse> permissionResponse = permissionService.bulkInsert(permissionRequestList);
-        final ApiResponse<List<PermissionResponse>> response = ApiResponse.<List<PermissionResponse>>builder()
+        return ApiResponse.<List<PermissionResponse>>builder()
                 .result(permissionResponse)
                 .build();
-        return response;
     }
     
 
     @GetMapping
     ApiResponse<List<PermissionResponse>> getAll() {
         final List<PermissionResponse> permissionResponseList = permissionService.getAll();
-        final ApiResponse<List<PermissionResponse>> response = ApiResponse.<List<PermissionResponse>>builder()
+        return ApiResponse.<List<PermissionResponse>>builder()
                 .result(permissionResponseList)
                 .build();
-        return response;
     }
 
     @DeleteMapping("/{name}")

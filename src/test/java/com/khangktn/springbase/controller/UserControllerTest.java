@@ -1,11 +1,7 @@
 package com.khangktn.springbase.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.khangktn.springbase.dto.request.UserCreationRequest;
-import com.khangktn.springbase.dto.response.UserResponse;
-import com.khangktn.springbase.service.UserService;
-import lombok.extern.slf4j.Slf4j;
+import java.time.LocalDate;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
@@ -20,14 +16,20 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-import java.time.LocalDate;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.khangktn.springbase.dto.request.UserCreationRequest;
+import com.khangktn.springbase.dto.response.UserResponse;
+import com.khangktn.springbase.service.UserService;
+
+import lombok.extern.slf4j.Slf4j;
 
 
 @Slf4j
 @SpringBootTest
 @AutoConfigureMockMvc
 @TestPropertySource("/test.properties")
-public class UserControllerTest {
+class UserControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -84,13 +86,9 @@ public class UserControllerTest {
     void createUser_invalidUsername_fail() throws Exception {
         // GIVEN
         userCreationRequest.setUsername("kt");
-        ObjectMapper objectMapper = new ObjectMapper();
+        final ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
-        String content = objectMapper.writeValueAsString(userCreationRequest);
-
-        // Exception occur when send request, so no need call service
-        // Mockito.when(userService.createUser(ArgumentMatchers.any()))
-        //        .thenReturn(userResponse);
+        final String content = objectMapper.writeValueAsString(userCreationRequest);
 
         // WHEN, THEN
         mockMvc.perform(MockMvcRequestBuilders

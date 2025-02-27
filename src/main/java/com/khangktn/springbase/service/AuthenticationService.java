@@ -95,7 +95,7 @@ public class AuthenticationService {
      * @param username User
      * @return string token
      */
-    private String generateToken(User user) {
+    private String generateToken(final User user) {
         final JWSHeader jwsHeader = new JWSHeader(JWSAlgorithm.HS512);
         final JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
                 .subject(user.getUsername())
@@ -228,9 +228,8 @@ public class AuthenticationService {
             final String username = signedJWT.getJWTClaimsSet().getSubject();
             final User user = userRepository.findByUsername(username)
                     .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXIST));
-            final String newToken = generateToken(user);
 
-            return newToken;
+            return generateToken(user);
         } catch (ParseException e) {
             log.error("Parse token occur error: ", e.getMessage());
             throw new RuntimeException(e.getMessage());

@@ -2,7 +2,6 @@ package com.khangktn.springbase.service;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -57,13 +56,13 @@ public class UserService {
         return userRepository.findAll()
                 .stream()
                 .map(userMapper::toUserResponse)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @PostAuthorize("returnObject.username == authentication.name")
     public UserResponse getUser(final String id) {
         final User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXIST));
         return userMapper.toUserResponse(user);
     }
 
@@ -88,7 +87,7 @@ public class UserService {
 
     public void deleteUser(final String userId) {
         final User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXIST));
         userRepository.delete(user);
     }
 }

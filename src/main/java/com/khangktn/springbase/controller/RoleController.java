@@ -31,19 +31,17 @@ public class RoleController {
     @PostMapping
     public ApiResponse<RoleResponse> create(@RequestBody final RoleRequest roleRequest) {
         final RoleResponse roleResponse = roleService.create(roleRequest);
-        final ApiResponse<RoleResponse> response = ApiResponse.<RoleResponse>builder()
+        return ApiResponse.<RoleResponse>builder()
                 .result(roleResponse)
                 .build();
-        return response;
     }
 
     @GetMapping
     public ApiResponse<List<RoleResponse>> getAll() {
         final List<RoleResponse> roleResponseList = roleService.getAll();
-        final ApiResponse<List<RoleResponse>> response = ApiResponse.<List<RoleResponse>>builder()
+        return ApiResponse.<List<RoleResponse>>builder()
                 .result(roleResponseList)
                 .build();
-        return response;
     }
     
     @DeleteMapping("/{name}")

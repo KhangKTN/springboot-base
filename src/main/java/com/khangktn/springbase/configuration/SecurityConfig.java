@@ -1,6 +1,5 @@
 package com.khangktn.springbase.configuration;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,8 +24,11 @@ public class SecurityConfig {
     @Value("${jwt.signerKey}")
     private String signerKey;
 
-    @Autowired
-    CustomJwtDecoder customJwtDecoder;
+    private final CustomJwtDecoder customJwtDecoder;
+
+    SecurityConfig(final CustomJwtDecoder customJwtDecoder) {
+        this.customJwtDecoder = customJwtDecoder;
+    }
 
     @Bean
     public SecurityFilterChain filterChain(final HttpSecurity httpSecurity) throws Exception {
@@ -50,7 +52,6 @@ public class SecurityConfig {
     @Bean
     JwtAuthenticationConverter jwtAuthenticationConverter() {
         final JwtGrantedAuthoritiesConverter jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
-        // jwtGrantedAuthoritiesConverter.setAuthorityPrefix("ROLE_");
 
          // Do not add prefix 'ROLE_' because has been handle in class AuthenticationService, method buildScope
         jwtGrantedAuthoritiesConverter.setAuthorityPrefix("");
@@ -59,15 +60,6 @@ public class SecurityConfig {
         jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwtGrantedAuthoritiesConverter);
         return jwtAuthenticationConverter;
     }
-
-    // This method cancel because implement class custom JwtDecoder
-    /* @Bean
-    JwtDecoder jwtDecoder() {
-        final SecretKeySpec secretKeySpec = new SecretKeySpec(signerKey.getBytes(), JWSAlgorithm.HS512.getName());
-        return NimbusJwtDecoder.withSecretKey(secretKeySpec)
-                .macAlgorithm(MacAlgorithm.HS512)
-                .build();
-    } */
 
     @Bean
     PasswordEncoder passwordEncoder() {

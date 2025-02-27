@@ -23,7 +23,7 @@ import com.khangktn.springbase.repository.UserRepository;
 
 @SpringBootTest
 @TestPropertySource("/test.properties")
-public class UserServiceTest {
+class UserServiceTest {
 
     @Autowired
     private UserService userService;
@@ -71,13 +71,13 @@ public class UserServiceTest {
                 .thenReturn(user);
 
         // WHEN
-        final UserResponse response = userService.createUser(userCreationRequest);
+        final UserResponse responseActual = userService.createUser(userCreationRequest);
 
         // THEN
-        Assertions.assertEquals(response.getId(), userResponse.getId());
-        Assertions.assertEquals(response.getUsername(), userResponse.getUsername());
-        Assertions.assertEquals(response.getFirstName(), userResponse.getFirstName());
-        Assertions.assertEquals(response.getLastName(), userResponse.getLastName());
+        Assertions.assertEquals(userResponse.getId(), responseActual.getId());
+        Assertions.assertEquals(userResponse.getUsername(), responseActual.getUsername());
+        Assertions.assertEquals(userResponse.getFirstName(), responseActual.getFirstName());
+        Assertions.assertEquals(userResponse.getLastName(), responseActual.getLastName());
     }
 
     @Test
@@ -89,8 +89,9 @@ public class UserServiceTest {
         // THEN
         final AppException appException = Assertions.assertThrows(AppException.class,
                         () -> userService.createUser(userCreationRequest));
-        Assertions.assertEquals(appException.getMessage(), "User is exist!");
-        Assertions.assertEquals(appException.getErrorCode().getCode(), 1002);
+
+        Assertions.assertEquals("User is exist!", appException.getMessage());
+        Assertions.assertEquals(1002, appException.getErrorCode().getCode());
     }
 
     @Test
@@ -100,8 +101,8 @@ public class UserServiceTest {
                         .thenReturn(Optional.of(user));
         final UserResponse userActual = userService.getCurrentProfile();
         
-        Assertions.assertEquals(userActual.getUsername(), "khangktn-test");
-        Assertions.assertEquals(userActual.getFirstName(), "Khang");
+        Assertions.assertEquals("khangktn-test", userActual.getUsername());
+        Assertions.assertEquals("Khang", userActual.getFirstName());
     }
 
     @Test
@@ -113,7 +114,7 @@ public class UserServiceTest {
                 AppException.class,
                 () -> userService.getCurrentProfile());
 
-        Assertions.assertEquals(ErrorCode.USER_NOT_EXIST.getCode(), 1005);
+        Assertions.assertEquals(ErrorCode.USER_NOT_EXIST.getCode(), appException.getErrorCode().getCode());
         Assertions.assertEquals(ErrorCode.USER_NOT_EXIST.getMessage(), appException.getMessage());
     }
 }

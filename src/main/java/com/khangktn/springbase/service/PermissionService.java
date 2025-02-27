@@ -44,6 +44,7 @@ public class PermissionService {
             .toList();
 
         final List<Permission> permissionPersistList = permissionRepository.saveAll(permissionPrepareList);
+
         return permissionPersistList.stream()
                 .map(permissionMapper::toPermissionResponse)
                 .toList();
@@ -51,10 +52,10 @@ public class PermissionService {
 
     public List<PermissionResponse> getAll() {
         final List<Permission> permissionList = permissionRepository.findAll();
-        final List<PermissionResponse> permissionResponseList = permissionList.stream()
+
+        return permissionList.stream()
             .map(permissionMapper::toPermissionResponse)
             .toList();
-        return permissionResponseList;
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -64,6 +65,7 @@ public class PermissionService {
             return false;
         }
         permissionRepository.deleteById(name);
+        
         return !permissionRepository.existsById(name);
     }
 }

@@ -9,7 +9,7 @@ import java.lang.annotation.Target;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 
-@Target({ FIELD }) // Validate will apply for (Ex: field, class)
+@Target({ FIELD }) // Validate will apply for field, class
 @Retention(RetentionPolicy.RUNTIME)
 @Constraint(validatedBy = { DateOfBirthValidator.class })
 public @interface DateOfBirthConstrain {
